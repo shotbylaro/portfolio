@@ -36,7 +36,7 @@
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const box=document.getElementById('pages'),msg=document.getElementById('msg');
-pdfjsLib.getDocument('portfolio.pdf?v='+Math.floor(Date.now()/60000)).promise.then(async pdf=>{
+pdfjsLib.getDocument('portfolio2.pdf?v='+Math.floor(Date.now()/60000)).promise.then(async pdf=>{
   msg.remove();
   const dpr=window.devicePixelRatio||1;
   for(let n=1;n<=pdf.numPages;n++){
@@ -49,7 +49,7 @@ pdfjsLib.getDocument('portfolio.pdf?v='+Math.floor(Date.now()/60000)).promise.th
     box.appendChild(c);
     await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
   }
-}).catch(()=>{msg.innerHTML='PDF se nepodařilo načíst. <a href="portfolio.pdf">Otevřít přímo</a>'});
+}).catch(()=>{msg.innerHTML='PDF se nepodařilo načíst. <a href="portfolio2.pdf">Otevřít přímo</a>'});
 </script>
 </body>
 </html>
