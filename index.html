@@ -16,7 +16,10 @@
   .close{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#4154d6;color:#fff;text-decoration:none;font-size:22px;line-height:1}
   .close:hover{filter:brightness(1.12)}
   #pages{max-width:1100px;margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:14px;align-items:center}
-  canvas{max-width:100%;border-radius:10px;background:#fff}
+  .pg{position:relative}
+  .pg canvas{display:block;max-width:100%;border-radius:10px;background:#fff}
+  .pg a{position:absolute;display:block;border-radius:2px}
+  .pg a:hover{background:rgba(65,84,214,.15)}
   #msg{text-align:center;padding:60px 20px;color:#9a9f9d}
   #msg a{color:#fff}
 </style>
@@ -43,11 +46,38 @@ pdfjsLib.getDocument('portfolio2.pdf?v='+Math.floor(Date.now()/60000)).promise.t
     const page=await pdf.getPage(n);
     const w=Math.min(box.clientWidth-36,1064);
     const s=w/page.getViewport({scale:1}).width;
-    const vp=page.getViewport({scale:s*dpr});
+    const vp=page.getViewport({scale:s*dpr});      // pro ostré vykreslení
+    const cssVp=page.getViewport({scale:s});       // pro pozice odkazů v CSS pixelech
+
+    const wrap=document.createElement('div');
+    wrap.className='pg';
+    wrap.style.width=w+'px';
+    wrap.style.height=cssVp.height+'px';
+
     const c=document.createElement('canvas');
-    c.width=vp.width;c.height=vp.height;c.style.width=w+'px';c.style.height=(vp.height/dpr)+'px';
-    box.appendChild(c);
+    c.width=vp.width;c.height=vp.height;
+    c.style.width=w+'px';c.style.height=cssVp.height+'px';
+    wrap.appendChild(c);
+    box.appendChild(wrap);
+
     await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+
+    // Přidání klikacích odkazů z anotací PDF
+    const anns=await page.getAnnotations();
+    for(const a of anns){
+      if(a.subtype!=='Link'||!a.url) continue;
+      const [x1,y1,x2,y2]=cssVp.convertToViewportRectangle(a.rect);
+      const link=document.createElement('a');
+      link.href=a.url;
+      link.target='_blank';
+      link.rel='noopener noreferrer';
+      link.setAttribute('aria-label',a.url);
+      link.style.left=Math.min(x1,x2)+'px';
+      link.style.top=Math.min(y1,y2)+'px';
+      link.style.width=Math.abs(x2-x1)+'px';
+      link.style.height=Math.abs(y2-y1)+'px';
+      wrap.appendChild(link);
+    }
   }
 }).catch(()=>{msg.innerHTML='PDF se nepodařilo načíst. <a href="portfolio2.pdf">Otevřít přímo</a>'});
 </script>
